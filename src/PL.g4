@@ -39,10 +39,17 @@ expression returns [Expr expressionExpr]
     | left=expression '+' right=expression { $expressionExpr = new Arithmetics(Operator.Add, $left.expressionExpr, $right.expressionExpr); }
     | left=expression '-' right=expression { $expressionExpr = new Arithmetics(Operator.Sub, $left.expressionExpr, $right.expressionExpr); }
     | left=expression '*' right=expression { $expressionExpr = new Arithmetics(Operator.Mul, $left.expressionExpr, $right.expressionExpr); }
+    | tuple { $expressionExpr = $tuple.tupleExpr; }
+    | tupleAccess { $expressionExpr = $tupleAccess.accessExpr; }
+    | list { $expressionExpr = $list.listExpr; }
+    | listAccess { $expressionExpr = $listAccess.listAccessExpr; }
+    | lenFunction { $expressionExpr = $lenFunction.lenExpr; }
+    | left=expression '++' right=expression { $expressionExpr = new StringConcatExpr($left.expressionExpr, $right.expressionExpr); }
     ;
 
 assignment returns [Expr assignmentExpr]
     : ID '=' expression { $assignmentExpr = new Assign($ID.text, $expression.expressionExpr); }
+    | listVar=ID '[' index=expression ']' '=' e=expression { $assignmentExpr = new ListAssignment($listVar.text, $index.expressionExpr, $e.expressionExpr); }
     ;
 
 print returns [Expr printExpr]
@@ -50,8 +57,8 @@ print returns [Expr printExpr]
     ;
     
 forLoop returns [Expr forLoopExpr]
-    : 'for' '(' ID 'in' begin=intLiteral '..' end=intLiteral ')' '{' block '}' 
-        { $forLoopExpr = new ForLoop($ID.text, $begin.intExpr, $end.intExpr, $block.blockExpr); }
+    : 'for' '(' ID 'in' begin=expression '..' end=expression ')' '{' block '}' 
+        { $forLoopExpr = new ForLoop($ID.text, $begin.expressionExpr, $end.expressionExpr, $block.blockExpr); }
     ;
     
 ifElse returns [Expr ifElseExpr]
@@ -101,13 +108,33 @@ argList returns [List<Expr> argsList]
 stringLiteral returns [Expr stringExpr]
     : STRING { $stringExpr = new StringLiteral($STRING.text.substring(1, $STRING.text.length() - 1)); }
     | ID { $stringExpr = new Deref($ID.text); }
-    | first=stringLiteral CONCAT second=stringLiteral { $stringExpr = new StringConcatExpr($first.stringExpr, $second.stringExpr); }
+    // | first=stringLiteral CONCAT second=stringLiteral { $stringExpr = new StringConcatExpr($first.stringExpr, $second.stringExpr); }
     | '(' expression ')' { $stringExpr = $expression.expressionExpr; } 
     | left=stringLiteral '*' right=intLiteral { $stringExpr = new StringRepeatExpr($left.stringExpr, $right.intExpr); }
     ;
 
 intLiteral returns [Expr intExpr]
     : NUMBER { $intExpr = new IntLiteral($NUMBER.text); }
+    ;
+
+tuple returns [Expr tupleExpr]
+    : '(' exprList=argList ')' { $tupleExpr = new Tuple($exprList.argsList); }
+    ;
+
+tupleAccess returns [Expr accessExpr]
+    : tupleVar=ID '[' index=expression ']' { $accessExpr = new ElementAccess($tupleVar.text, $index.expressionExpr); }
+    ;
+
+lenFunction returns [Expr lenExpr]
+    : 'len' '(' expression ')' { $lenExpr = new Length($expression.expressionExpr); }
+    ;
+
+list returns [Expr listExpr]
+    : '<' exprList=argList '>' { $listExpr = new OurList($exprList.argsList); }
+    ;
+
+listAccess returns [Expr listAccessExpr]
+    : listVar=ID '[' index=expression ']' { $listAccessExpr = new ElementAccess($listVar.text, $index.expressionExpr); }
     ;
 
 // Lexer rules
@@ -118,3 +145,5 @@ NUMBER : [0-9]+ ;
 WHITESPACE : [ \t\r\n] -> skip ;
 NEWLINE : '\r'? '\n' ;
 
+LSQUARE : '[' ; 
+RSQUARE : ']' ;

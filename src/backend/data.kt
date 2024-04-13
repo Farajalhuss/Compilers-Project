@@ -22,3 +22,12 @@ class BooleanData(val value:Boolean): Data() {
     "${value}"
 }
 
+class ListData(val elements: MutableList<Data>) : Data() {
+    override fun toString() = 
+    elements.joinToString(", ", prefix = "[", postfix = "]")
+}
+
+class TupleData(val elements: List<Data>) : Data() {
+    override fun toString() = 
+    elements.joinToString(", ", prefix = "(", postfix = ")")
+}

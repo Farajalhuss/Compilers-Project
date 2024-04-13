@@ -233,3 +233,59 @@ class Ifelse(
         }
     }
 }
+
+class ElementAccess(private val varName: String, private val indexExpr: Expr) : Expr() {
+    override fun eval(runtime: Runtime): Data {
+        val variable = runtime.symbolTable[varName] ?: throw Exception("$varName is not defined.")
+        val index = indexExpr.eval(runtime) as? IntData ?: throw Exception("Index must be an integer.")
+        
+        return when (variable) {
+            is TupleData -> variable.elements.getOrElse(index.value) {
+                throw IndexOutOfBoundsException("Tuple index out of bounds.")
+            }
+            is ListData -> variable.elements.getOrElse(index.value) {
+                throw IndexOutOfBoundsException("List index out of bounds.")
+            }
+            else -> throw Exception("$varName is neither a tuple nor a list.")
+        }
+    }
+}
+
+
+
+class Tuple(val elements: List<Expr>) : Expr() {
+    override fun eval(runtime: Runtime): Data {
+        return TupleData(elements.map { it.eval(runtime) })
+    }
+}
+
+
+class Length(private val target: Expr) : Expr() {
+    override fun eval(runtime: Runtime): Data {
+        val result = target.eval(runtime)
+        if (result is TupleData) {
+            return IntData(result.elements.size)
+        } 
+        else if (result is ListData){
+            return IntData(result.elements.size)
+        }
+        else {
+            return IntData(result.toString().length)
+        }
+    }
+}
+
+class OurList (val elements: MutableList<Expr>) : Expr() {
+    override fun eval(runtime: Runtime): Data {
+        return ListData(elements.map { it.eval(runtime) }.toMutableList())
+    }
+}
+
+class ListAssignment(private val listName: String, private val indexExpr: Expr, private val newElementExpr: Expr) : Expr() {
+    override fun eval(runtime: Runtime): Data {
+        val index = indexExpr.eval(runtime) as? IntData ?: throw Exception("list index is not an integer.")
+        val newValue = newElementExpr.eval(runtime)
+        runtime.updateListElement(listName, index.value, newValue)
+        return newValue
+    }
+}
