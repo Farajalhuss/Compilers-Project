@@ -251,27 +251,9 @@ class ElementAccess(private val varName: String, private val indexExpr: Expr) : 
     }
 }
 
-
-
 class Tuple(val elements: List<Expr>) : Expr() {
     override fun eval(runtime: Runtime): Data {
         return TupleData(elements.map { it.eval(runtime) })
-    }
-}
-
-
-class Length(private val target: Expr) : Expr() {
-    override fun eval(runtime: Runtime): Data {
-        val result = target.eval(runtime)
-        if (result is TupleData) {
-            return IntData(result.elements.size)
-        } 
-        else if (result is ListData){
-            return IntData(result.elements.size)
-        }
-        else {
-            return IntData(result.toString().length)
-        }
     }
 }
 
@@ -289,3 +271,19 @@ class ListAssignment(private val listName: String, private val indexExpr: Expr, 
         return newValue
     }
 }
+
+class Length(private val target: Expr) : Expr() {
+    override fun eval(runtime: Runtime): Data {
+        val result = target.eval(runtime)
+        if (result is TupleData) {
+            return IntData(result.elements.size)
+        } 
+        else if (result is ListData){
+            return IntData(result.elements.size)
+        }
+        else {
+            return IntData(result.toString().length)
+        }
+    }
+}
+

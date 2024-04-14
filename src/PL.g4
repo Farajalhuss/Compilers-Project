@@ -39,12 +39,12 @@ expression returns [Expr expressionExpr]
     | left=expression '+' right=expression { $expressionExpr = new Arithmetics(Operator.Add, $left.expressionExpr, $right.expressionExpr); }
     | left=expression '-' right=expression { $expressionExpr = new Arithmetics(Operator.Sub, $left.expressionExpr, $right.expressionExpr); }
     | left=expression '*' right=expression { $expressionExpr = new Arithmetics(Operator.Mul, $left.expressionExpr, $right.expressionExpr); }
+    | left=expression '++' right=expression { $expressionExpr = new StringConcatExpr($left.expressionExpr, $right.expressionExpr); }
     | tuple { $expressionExpr = $tuple.tupleExpr; }
     | tupleAccess { $expressionExpr = $tupleAccess.accessExpr; }
     | list { $expressionExpr = $list.listExpr; }
     | listAccess { $expressionExpr = $listAccess.listAccessExpr; }
     | lenFunction { $expressionExpr = $lenFunction.lenExpr; }
-    | left=expression '++' right=expression { $expressionExpr = new StringConcatExpr($left.expressionExpr, $right.expressionExpr); }
     ;
 
 assignment returns [Expr assignmentExpr]
@@ -108,7 +108,6 @@ argList returns [List<Expr> argsList]
 stringLiteral returns [Expr stringExpr]
     : STRING { $stringExpr = new StringLiteral($STRING.text.substring(1, $STRING.text.length() - 1)); }
     | ID { $stringExpr = new Deref($ID.text); }
-    // | first=stringLiteral CONCAT second=stringLiteral { $stringExpr = new StringConcatExpr($first.stringExpr, $second.stringExpr); }
     | '(' expression ')' { $stringExpr = $expression.expressionExpr; } 
     | left=stringLiteral '*' right=intLiteral { $stringExpr = new StringRepeatExpr($left.stringExpr, $right.intExpr); }
     ;
@@ -144,6 +143,4 @@ ID     : [a-zA-Z_][a-zA-Z_0-9]* ;
 NUMBER : [0-9]+ ;
 WHITESPACE : [ \t\r\n] -> skip ;
 NEWLINE : '\r'? '\n' ;
-
-LSQUARE : '[' ; 
-RSQUARE : ']' ;
+LINE_COMMENT    : '//' ~[\r\n]* '\r'? '\n' -> skip;

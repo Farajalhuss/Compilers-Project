@@ -24,7 +24,7 @@ class BooleanData(val value:Boolean): Data() {
 
 class ListData(val elements: MutableList<Data>) : Data() {
     override fun toString() = 
-    elements.joinToString(", ", prefix = "[", postfix = "]")
+    elements.joinToString(", ", prefix = "<", postfix = ">")
 }
 
 class TupleData(val elements: List<Data>) : Data() {
